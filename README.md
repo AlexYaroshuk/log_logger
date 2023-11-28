@@ -1,16 +1,27 @@
-# log_logger_app
+# Project Overview
 
-A new Flutter project.
+A Flutter application for displaying and searching through categorized logs.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Display a list of logs.
+- Search functionality for logs.
+- Filter logs based on error status.
+- Navigation to log details.
 
-A few resources to get you started if this is your first Flutter project:
+## Code Structure
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- DataSearch: Implements search functionality.
+- ListPage: Displays the list of logs.
+- _ListPageState: Manages the state of ListPage.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage
+
+Ensure Flutter and Dart are installed. Clone the project and run flutter run.
+
+## Dependencies
+
+- flutter/material.dart
+- ../models/log.dart
+- ../services/fetch_logs.dart
+- faker
