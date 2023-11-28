@@ -1,0 +1,32 @@
+name: flutter_logs_app
+description: A Flutter app that fetches and displays logs from the internet.
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  http: ^0.13.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  #assets:
+   # - images/
+  #module:
+   # androidX: true
+ # plugin:
+   # platforms:
+   #   ios:
+   #     pluginClass: FlutterLogsAppPlugin
+   #   android:
+    #    package: com.example.flutter_logs_app
+    #    pluginClass: FlutterLogsAppPlugin
