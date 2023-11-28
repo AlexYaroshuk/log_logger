@@ -1,6 +1,113 @@
 import 'package:flutter/material.dart';
 import '../models/log.dart';
 import '../services/fetch_logs.dart';
+import 'package:faker/faker.dart';
+
+class DataSearch extends SearchDelegate<String> {
+  final List<Log> logs;
+
+  DataSearch(this.logs);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: AnimatedIcon(
+        icon: AnimatedIcons.menu_arrow,
+        progress: transitionAnimation,
+      ),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = logs.where(
+        (log) => log.content.toLowerCase().contains(query.toLowerCase()));
+
+    return ListView(
+      children: suggestions
+          .map<Widget>((log) => ListTile(
+                title: RichText(
+                  text: TextSpan(
+                    text: log.content.substring(0,
+                        log.content.toLowerCase().indexOf(query.toLowerCase())),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyText2, // Use the same TextStyle as your original widget's list
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: query,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          )),
+                      TextSpan(
+                          text: log.content.substring(log.content
+                                  .toLowerCase()
+                                  .indexOf(query.toLowerCase()) +
+                              query.length)),
+                    ],
+                  ),
+                ),
+                onTap: () {
+                  query = log.content;
+                  showResults(context);
+                },
+              ))
+          .toList(),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = logs.where(
+        (log) => log.content.toLowerCase().contains(query.toLowerCase()));
+
+    return ListView(
+      children: results
+          .map<Widget>((log) => ListTile(
+                title: RichText(
+                  text: TextSpan(
+                    text: log.content.substring(0,
+                        log.content.toLowerCase().indexOf(query.toLowerCase())),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyText2, // Use the same TextStyle as your original widget's list
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: query,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                          )),
+                      TextSpan(
+                          text: log.content.substring(log.content
+                                  .toLowerCase()
+                                  .indexOf(query.toLowerCase()) +
+                              query.length)),
+                    ],
+                  ),
+                ),
+                onTap: () {
+                  close(context, log.content);
+                },
+              ))
+          .toList(),
+    );
+  }
+}
 
 class ListPage extends StatefulWidget {
   final String category;
@@ -13,6 +120,8 @@ class ListPage extends StatefulWidget {
 
 class _ListPageState extends State<ListPage> {
   late Future<List<Log>> futureLogs;
+  List<Log> logs = [];
+  final faker = Faker();
 
 // ?? placeholders
   @override
@@ -22,22 +131,25 @@ class _ListPageState extends State<ListPage> {
   }
 
   List<Log> _getPlaceholderLogs() {
-    return List<Log>.generate(20, (index) {
+    logs = List<Log>.generate(20, (index) {
       return Log(
         category: 'Category 1',
-        content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. $index',
+        content: faker.lorem.sentence(),
         isError: index % 4 == 0, // Every other log will be an error
       );
     });
+    return logs;
   }
 
 // ?? actual
 /*   @override
-  void initState() {
-    super.initState();
-    futureLogs = fetchLogs(widget.category);
-  } */
+void initState() {
+  super.initState();
+  futureLogs = fetchLogs(widget.category).then((fetchedLogs) {
+    logs = fetchedLogs;
+    return fetchedLogs;
+  });
+} */
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +161,14 @@ class _ListPageState extends State<ListPage> {
                   style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.grey[700],
               iconTheme: IconThemeData(color: Colors.white),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    showSearch(context: context, delegate: DataSearch(logs));
+                  },
+                ),
+              ],
               bottom: TabBar(
                 labelColor: Colors.white,
                 indicatorColor: Colors.white,
