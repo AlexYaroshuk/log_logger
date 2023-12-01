@@ -17,11 +17,11 @@ class LogPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Is Error: ${log.isError ? 'Yes' : 'No'}'),
+            /*      Text('Is Error: ${log.isError ? 'Yes' : 'No'}'), */
             SizedBox(height: 8.0),
             Text('Content: ${log.content}'),
-            SizedBox(height: 8.0),
-            Text('Category: ${log.category}'),
+            /*       SizedBox(height: 8.0),
+            Text('Category: ${log.category}'), */
           ],
         ),
       ),

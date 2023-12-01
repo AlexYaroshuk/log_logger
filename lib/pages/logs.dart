@@ -109,22 +109,22 @@ class DataSearch extends SearchDelegate<String> {
   }
 }
 
-class ListPage extends StatefulWidget {
-  final String category;
+class LogsPage extends StatefulWidget {
+  final int sessionId;
 
-  ListPage({required this.category});
+  LogsPage({required this.sessionId});
 
   @override
-  _ListPageState createState() => _ListPageState();
+  _LogsPageState createState() => _LogsPageState();
 }
 
-class _ListPageState extends State<ListPage> {
+class _LogsPageState extends State<LogsPage> {
   late Future<List<Log>> futureLogs;
   List<Log> logs = [];
   final faker = Faker();
 
 // ?? placeholders
-  @override
+  /* @override
   void initState() {
     super.initState();
     futureLogs = Future.value(_getPlaceholderLogs());
@@ -133,23 +133,24 @@ class _ListPageState extends State<ListPage> {
   List<Log> _getPlaceholderLogs() {
     logs = List<Log>.generate(20, (index) {
       return Log(
-        category: 'Category 1',
-        content: faker.lorem.sentence(),
+        /*   category: 'Category 1', */
+        id: faker.lorem(),
+        contednt: faker.lorem.sentence(),
         isError: index % 4 == 0, // Every other log will be an error
       );
     });
     return logs;
-  }
+  } */
 
 // ?? actual
-/*   @override
-void initState() {
-  super.initState();
-  futureLogs = fetchLogs(widget.category).then((fetchedLogs) {
-    logs = fetchedLogs;
-    return fetchedLogs;
-  });
-} */
+  @override
+  void initState() {
+    super.initState();
+    futureLogs = fetchLogs(widget.sessionId).then((fetchedLogs) {
+      logs = fetchedLogs;
+      return fetchedLogs;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +158,7 @@ void initState() {
         length: 2,
         child: Scaffold(
             appBar: AppBar(
-              title: Text('${widget.category} logs',
+              title: Text('logs for sessionId = ${widget.sessionId} ',
                   style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.grey[700],
               iconTheme: IconThemeData(color: Colors.white),
@@ -183,7 +184,11 @@ void initState() {
                 FutureBuilder<List<Log>>(
                   future: futureLogs,
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                          child:
+                              CircularProgressIndicator()); // Wrap the CircularProgressIndicator with Center
+                    } else if (snapshot.hasData && snapshot.data!.length > 0) {
                       return Scrollbar(
                         child: ListView.builder(
                           itemCount: snapshot.data!.length,
@@ -191,11 +196,6 @@ void initState() {
                             return ListTile(
                               title: Text(
                                 snapshot.data![index].content,
-                                style: TextStyle(
-                                  color: snapshot.data![index].isError
-                                      ? Colors.red
-                                      : Colors.black,
-                                ),
                               ),
                               onTap: () {
                                 Navigator.pushNamed(
@@ -208,6 +208,8 @@ void initState() {
                           },
                         ),
                       );
+                    } else if (snapshot.hasData && snapshot.data!.length == 0) {
+                      return Center(child: Text('No logs found.'));
                     } else if (snapshot.hasError) {
                       return Text("${snapshot.error}");
                     }
@@ -219,40 +221,41 @@ void initState() {
                 FutureBuilder<List<Log>>(
                   future: futureLogs,
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      var errorLogs = snapshot.data!
-                          .where((log) => log.isError)
-                          .toList(); // Filter logs where isError is true
-                      return Scrollbar(
-                        child: ListView.builder(
-                          itemCount: errorLogs.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text(
-                                errorLogs[index].content,
-                                style: TextStyle(
-                                  color: errorLogs[index].isError
-                                      ? Colors.red
-                                      : Colors.black,
-                                ),
-                              ),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/log',
-                                  arguments: snapshot.data![index],
-                                );
-                              },
-                            );
-                          },
-                        ),
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasData) {
+                      final errorLogs = snapshot.data!
+                          .where((log) =>
+                              log.level
+                                  .toString()
+                                  .split('.')
+                                  .last
+                                  .toLowerCase() ==
+                              'error')
+                          .toList();
+                      if (errorLogs.isEmpty) {
+                        return Center(child: Text('No error logs found.'));
+                      }
+                      return ListView.builder(
+                        itemCount: errorLogs.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(errorLogs[index].content),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/log',
+                                arguments: errorLogs[index],
+                              );
+                            },
+                          );
+                        },
                       );
                     } else if (snapshot.hasError) {
                       return Text("${snapshot.error}");
                     }
 
-                    // By default, show a loading spinner.
-                    return CircularProgressIndicator();
+                    return Container(); // Return an empty Container as a fallback
                   },
                 ),
               ],
