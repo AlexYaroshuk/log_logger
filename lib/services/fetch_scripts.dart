@@ -1,23 +1,26 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/script.dart';
 import '../config.dart';
 
-Future<List<Script>> fetchScripts() async {
-  final client = HttpClient();
-  client.connectionTimeout = Duration(seconds: 3); // Set connection timeout
-
+Future<List<Script>> fetchScripts({bool withTimeout = true}) async {
   try {
     print('Fetching logs...');
-    final request = await client.getUrl(Uri.parse('${Config.API_URL}/scripts'));
-    final response = await request.close();
+    final responseFuture = http.get(Uri.parse('${Config.API_URL}/scripts'));
+
+    http.Response response;
+    if (withTimeout) {
+      response = await responseFuture.timeout(Duration(seconds: 3));
+    } else {
+      response = await responseFuture;
+    }
 
     if (response.statusCode == 200) {
       print('Response received. Parsing scripts...');
-      final responseBody = await response.transform(utf8.decoder).join();
-      List scripts = json.decode(responseBody);
+      List scripts = json.decode(response.body);
       print(scripts);
 
       return scripts.map((script) => Script.fromJson(script)).toList();
@@ -27,7 +30,10 @@ Future<List<Script>> fetchScripts() async {
     }
   } on SocketException catch (e) {
     print('SocketException: $e');
-    throw 'Could not establish a connection to the server. Please check your network connection.';
+    throw 'No internet connection.\n Check your network settings.';
+  } on TimeoutException catch (e) {
+    print('TimeoutException: $e');
+    throw 'Request timed out.\n Ensure that you have access rights.';
   } catch (e) {
     print('An error occurred: $e');
     throw e.toString();

@@ -1,4 +1,4 @@
-name: flutter_logs_app
+name: log_viewer
 description: A Flutter app that fetches and displays logs from the internet.
 
 version: 1.0.0+1

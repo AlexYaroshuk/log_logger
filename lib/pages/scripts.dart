@@ -16,7 +16,8 @@ class ScriptsPage extends StatelessWidget {
         backgroundColor: Colors.grey[700],
       ),
       body: FutureBuilder<List<Script>>(
-        future: fetchScripts(),
+        future:
+            fetchScripts(), //call fetchScripts(withTimeout: false) to remove the manual timeout & to see the actual error for debugging
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
