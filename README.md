@@ -19,13 +19,12 @@ A Flutter application for displaying and searching through categorized logs.
 
 Ensure Flutter and Dart are installed. Before running the project, create a `config.dart` file in the `lib` directory. This file should contain the your API URL. Here's an example of how your `config.dart` file might look:
 
-```
+```dart
+
 class Config {
   static const API_URL = 'YOUR_API_URL';
 }
 ```
-
-
 
 ## Dependencies
 

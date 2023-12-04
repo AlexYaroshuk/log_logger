@@ -4,8 +4,6 @@ import '../pages/sessions.dart';
 import 'pages/logs.dart';
 import 'pages/loginfo.dart';
 import 'models/log.dart';
-import 'models/session.dart';
-import 'models/script.dart';
 
 final Map<String, WidgetBuilder> routes = {
   '/': (context) => ScriptsPage(),

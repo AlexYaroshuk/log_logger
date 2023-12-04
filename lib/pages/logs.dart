@@ -47,7 +47,7 @@ class DataSearch extends SearchDelegate<String> {
                         log.content.toLowerCase().indexOf(query.toLowerCase())),
                     style: Theme.of(context)
                         .textTheme
-                        .bodyText2, // Use the same TextStyle as your original widget's list
+                        .bodyMedium, // Use the same TextStyle as your original widget's list
                     children: <TextSpan>[
                       TextSpan(
                           text: query,
@@ -85,7 +85,7 @@ class DataSearch extends SearchDelegate<String> {
                         log.content.toLowerCase().indexOf(query.toLowerCase())),
                     style: Theme.of(context)
                         .textTheme
-                        .bodyText2, // Use the same TextStyle as your original widget's list
+                        .bodyMedium, // Use the same TextStyle as your original widget's list
                     children: <TextSpan>[
                       TextSpan(
                           text: query,
