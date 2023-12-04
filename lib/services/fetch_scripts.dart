@@ -30,7 +30,7 @@ Future<List<Script>> fetchScripts({bool withTimeout = true}) async {
     }
   } on SocketException catch (e) {
     print('SocketException: $e');
-    throw 'No internet connection.\n Check your network settings. error: $e';
+    throw 'No internet connection.\n Check your network settings.';
   } on TimeoutException catch (e) {
     print('TimeoutException: $e');
     throw 'Request timed out.\n Ensure that you have access rights.';
