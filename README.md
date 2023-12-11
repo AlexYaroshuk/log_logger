@@ -32,3 +32,6 @@ class Config {
 - ../models/log.dart
 - ../services/fetch_logs.dart
 - faker
+
+
+<!-- create time on the left. Log level as well. and add divider -->

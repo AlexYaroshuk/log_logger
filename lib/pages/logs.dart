@@ -122,6 +122,8 @@ class _LogsPageState extends State<LogsPage> {
   late Future<List<Log>> futureLogs;
   List<Log> logs = [];
   final faker = Faker();
+  bool _isSearching = false; // Add this
+  String _searchQuery = "";
 
 // ?? placeholders
   /* @override
@@ -158,15 +160,36 @@ class _LogsPageState extends State<LogsPage> {
         length: 2,
         child: Scaffold(
             appBar: AppBar(
-              title: Text('logs for sessionId = ${widget.sessionId} ',
-                  style: TextStyle(color: Colors.white)),
+              title: _isSearching // Add this
+                  ? TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: "Search logs...",
+                        hintStyle: TextStyle(color: Colors.white),
+                      ),
+                    )
+                  : Text('logs for sessionId = ${widget.sessionId} ',
+                      style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.grey[700],
               iconTheme: IconThemeData(color: Colors.white),
               actions: [
                 IconButton(
-                  icon: Icon(Icons.search),
+                  icon: Icon(
+                      _isSearching ? Icons.close : Icons.search), // Change this
                   onPressed: () {
-                    showSearch(context: context, delegate: DataSearch(logs));
+                    setState(() {
+                      if (_isSearching) {
+                        _isSearching = false;
+                        _searchQuery = "";
+                      } else {
+                        _isSearching = true;
+                      }
+                    });
                   },
                 ),
               ],
@@ -174,7 +197,19 @@ class _LogsPageState extends State<LogsPage> {
                 labelColor: Colors.white,
                 indicatorColor: Colors.white,
                 tabs: [
-                  Tab(text: 'All Logs'),
+                  Tab(
+                      child: FutureBuilder<List<Log>>(
+                    future: futureLogs,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text("All Logs");
+                      } else if (snapshot.hasError) {
+                        return Text("All Logs");
+                      } else {
+                        return Text("All Logs ${snapshot.data!.length}");
+                      }
+                    },
+                  )),
                   Tab(text: 'Error Logs'),
                 ],
               ),
@@ -182,47 +217,138 @@ class _LogsPageState extends State<LogsPage> {
             body: TabBarView(
               children: [
                 FutureBuilder<List<Log>>(
-                  future: futureLogs,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                          child:
-                              CircularProgressIndicator()); // Wrap the CircularProgressIndicator with Center
-                    } else if (snapshot.hasData && snapshot.data!.length > 0) {
-                      return Scrollbar(
-                        child: ListView.builder(
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text(
-                                snapshot.data![index].content,
-                              ),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/log',
-                                  arguments: snapshot.data![index],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    } else if (snapshot.hasData && snapshot.data!.length == 0) {
-                      return Center(child: Text('No logs found.'));
-                    } else if (snapshot.hasError) {
-                      return Text("${snapshot.error}");
-                    }
+                    future: futureLogs,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                            child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ));
+                      } else if (snapshot.hasError) {
+                        return Text("${snapshot.error}");
+                      } else {
+                        var filteredLogs = snapshot.data!
+                            .where((log) => log.content
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase()))
+                            .toList();
 
-                    // By default, show a loading spinner.
-                    return CircularProgressIndicator();
-                  },
-                ),
+                        if (filteredLogs.isEmpty) {
+                          return Center(
+                              child: Text(_isSearching
+                                  ? "No results found for '$_searchQuery'"
+                                  : 'No logs'));
+                        }
+                        return LayoutBuilder(builder: (context, constraints) {
+                          var maxWidth = constraints.maxWidth - 16;
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: <Widget>[
+                                      Container(
+                                        width: maxWidth *
+                                            0.25, // 1/4 of the total width
+                                        child: Text('Create Time',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                      Container(
+                                        width: maxWidth *
+                                            0.25, // 1/4 of the total width
+                                        child: Center(
+                                            child: Text('Level',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold))),
+                                      ),
+                                      Container(
+                                        width: maxWidth *
+                                            0.5, // 1/2 of the total width
+                                        child: Text('Content',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                  ListView.separated(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: filteredLogs.length,
+                                    separatorBuilder: (context, index) =>
+                                        Divider(color: Colors.grey),
+                                    itemBuilder: (context, index) {
+                                      var log = filteredLogs[index];
+                                      var start = log.content
+                                          .toLowerCase()
+                                          .indexOf(_searchQuery.toLowerCase());
+                                      var end = start + _searchQuery.length;
+                                      return Row(
+                                        children: <Widget>[
+                                          Container(
+                                            width: maxWidth *
+                                                0.25, // 1/4 of the total width
+                                            child: Text(log.createTime),
+                                          ),
+                                          Container(
+                                            width: maxWidth *
+                                                0.25, // 1/4 of the total width
+                                            child: Center(
+                                                child: Text(log.level
+                                                    .toString()
+                                                    .split('.')
+                                                    .last)),
+                                          ),
+                                          Container(
+                                            width: maxWidth *
+                                                0.5, // 1/2 of the total width
+                                            child: RichText(
+                                              text: TextSpan(
+                                                text: log.content
+                                                    .substring(0, start),
+                                                style: DefaultTextStyle.of(
+                                                        context)
+                                                    .style
+                                                    .copyWith(
+                                                        fontSize:
+                                                            12), // Reduced font size
+                                                children: <TextSpan>[
+                                                  TextSpan(
+                                                    text: log.content
+                                                        .substring(start, end),
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  TextSpan(
+                                                    text: log.content
+                                                        .substring(end),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        });
+                      }
+                    }),
                 FutureBuilder<List<Log>>(
                   future: futureLogs,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return Center(
+                          child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ));
                     } else if (snapshot.hasData) {
                       final errorLogs = snapshot.data!
                           .where((log) =>
