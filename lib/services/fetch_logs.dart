@@ -7,7 +7,7 @@ Future<List<Log>> fetchLogs(int sessionId) async {
   try {
     print('Fetching logs...');
     final response =
-        await http.get(Uri.parse('${Config.API_URL}/logs/${sessionId}'));
+        await http.get(Uri.parse('${Config.API_URL}/log/${sessionId}'));
 
     if (response.statusCode == 200) {
       print('Response received. Parsing logs...');

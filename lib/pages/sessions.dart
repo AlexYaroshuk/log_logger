@@ -33,30 +33,103 @@ class SessionsPage extends StatelessWidget {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('No sessions available'));
           } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(snapshot.data![index].name),
-                      Text(snapshot.data![index].status
-                          .toString()
-                          .split('.')
-                          .last),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/logs',
-                      arguments: snapshot.data![index].id,
-                    );
+            return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.builder(
+                  itemCount:
+                      snapshot.data!.length + 1, // Add one more for the header
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // This is the header
+                      return Table(
+                        columnWidths: {
+                          0: FlexColumnWidth(1), // This is your first column
+                          1: FlexColumnWidth(5), // This is your second column
+                          2: FlexColumnWidth(3), // This is your third column
+                          3: FlexColumnWidth(5), // This is your third column
+                          4: FlexColumnWidth(5), // This is your third column
+                        },
+                        children: [
+                          TableRow(
+                            children: [
+                              Text('ID',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Created',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Status',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text('IP',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Name',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              // Add more headers as needed
+                            ],
+                          ),
+                          /*    TableRow(
+                            children: [
+                              Divider(),
+                              Divider(),
+                              Divider(),
+                              Divider(),
+                              Divider(),
+                              // Add more dividers as needed
+                            ],
+                          ), */
+                        ],
+                      );
+                    } else {
+                      // This is the data
+                      var session = snapshot
+                          .data![index - 1]; // Subtract one for the header
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/logs',
+                            arguments: session.id,
+                          );
+                        },
+                        child: Table(
+                          columnWidths: {
+                            0: FlexColumnWidth(1), // This is your first column
+                            1: FlexColumnWidth(5), // This is your second column
+                            2: FlexColumnWidth(3), // This is your third column
+                            3: FlexColumnWidth(5), // This is your third column
+                            4: FlexColumnWidth(5), // This is your third column
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Text(session.id.toString()),
+                                Text(session
+                                    .formattedCreatedTime), // Replace with actual data
+                                Text(session.status.toString().split('.').last),
+                                Text(session.ip), // Replace with actual data
+                                Text(session.name), // Replace with actual data
+                                // Add more data fields as needed
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                Divider(),
+                                Divider(),
+                                Divider(),
+                                Divider(),
+                                Divider(),
+                                // Add more dividers as needed
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
-                );
-              },
-            );
+                ));
           }
         },
       ),

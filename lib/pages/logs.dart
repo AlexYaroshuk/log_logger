@@ -290,7 +290,7 @@ class _LogsPageState extends State<LogsPage> {
                                           Container(
                                             width: maxWidth *
                                                 0.25, // 1/4 of the total width
-                                            child: Text(log.createTime),
+                                            child: Text(log.formattedTime),
                                           ),
                                           Container(
                                             width: maxWidth *

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 enum LogLevel { info, debug, warning, error, critical }
 
 class Log {
@@ -5,7 +7,7 @@ class Log {
   final int sessionId;
   final LogLevel level;
   final String content;
-  final String ip;
+
   final String createTime;
 
   Log({
@@ -13,7 +15,6 @@ class Log {
     required this.sessionId,
     required this.level,
     required this.content,
-    required this.ip,
     required this.createTime,
   });
 
@@ -23,7 +24,6 @@ class Log {
       sessionId: json['session_id'] ?? 0,
       level: _parseLogLevel(json['level']),
       content: json['content'] ?? '',
-      ip: json['ip'] ?? '',
       createTime: json['create_time'] ?? '',
     );
   }
@@ -34,9 +34,13 @@ class Log {
       'session_id': sessionId,
       'level': level.toString().split('.').last.toUpperCase(),
       'content': content,
-      'ip': ip,
       'create_time': createTime,
     };
+  }
+
+  String get formattedTime {
+    DateTime parsedTime = DateTime.parse(createTime);
+    return DateFormat('dd-MM-yy HH:mm:ss').format(parsedTime);
   }
 }
 

@@ -8,8 +8,8 @@ import '../config.dart';
 
 Future<List<Script>> fetchScripts({bool withTimeout = true}) async {
   try {
-    print('Fetching logs...');
-    final responseFuture = http.get(Uri.parse('${Config.API_URL}/scripts'));
+    print('Fetching scripts...');
+    final responseFuture = http.get(Uri.parse('${Config.API_URL}/program/1'));
 
     http.Response response;
     if (withTimeout) {
