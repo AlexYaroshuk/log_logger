@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/log.dart';
 import '../services/fetch_logs.dart';
-import 'package:faker/faker.dart';
 
 class DataSearch extends SearchDelegate<String> {
   final List<Log> logs;
@@ -121,36 +120,35 @@ class LogsPage extends StatefulWidget {
 class _LogsPageState extends State<LogsPage> {
   late Future<List<Log>> futureLogs;
   List<Log> logs = [];
-  final faker = Faker();
   bool _isSearching = false; // Add this
   String _searchQuery = "";
-
-// ?? placeholders
-  /* @override
-  void initState() {
-    super.initState();
-    futureLogs = Future.value(_getPlaceholderLogs());
-  }
-
-  List<Log> _getPlaceholderLogs() {
-    logs = List<Log>.generate(20, (index) {
-      return Log(
-        /*   category: 'Category 1', */
-        id: faker.lorem(),
-        contednt: faker.lorem.sentence(),
-        isError: index % 4 == 0, // Every other log will be an error
-      );
-    });
-    return logs;
-  } */
-
+  ScrollController _scrollController = ScrollController();
+  int _offset = 0;
+  final int _limit = 10;
+  bool _isLoading = false;
 // ?? actual
   @override
   void initState() {
     super.initState();
-    futureLogs = fetchLogs(widget.sessionId).then((fetchedLogs) {
-      logs = fetchedLogs;
-      return fetchedLogs;
+    _getMoreData();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        _getMoreData();
+      }
+    });
+  }
+
+  _getMoreData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    List<Log> newLogs =
+        await fetchLogs(widget.sessionId, offset: _offset, limit: _limit);
+    setState(() {
+      _offset += _limit;
+      logs.addAll(newLogs);
+      _isLoading = false;
     });
   }
 
@@ -159,232 +157,154 @@ class _LogsPageState extends State<LogsPage> {
     return DefaultTabController(
         length: 2,
         child: Scaffold(
-            appBar: AppBar(
-              title: _isSearching // Add this
-                  ? TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: "Search logs...",
-                        hintStyle: TextStyle(color: Colors.white),
-                      ),
-                    )
-                  : Text('logs for sessionId = ${widget.sessionId} ',
-                      style: TextStyle(color: Colors.white)),
-              backgroundColor: Colors.grey[700],
-              iconTheme: IconThemeData(color: Colors.white),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                      _isSearching ? Icons.close : Icons.search), // Change this
-                  onPressed: () {
-                    setState(() {
-                      if (_isSearching) {
-                        _isSearching = false;
-                        _searchQuery = "";
-                      } else {
-                        _isSearching = true;
-                      }
-                    });
-                  },
-                ),
-              ],
-              bottom: TabBar(
-                labelColor: Colors.white,
-                indicatorColor: Colors.white,
-                tabs: [
-                  Tab(
-                      child: FutureBuilder<List<Log>>(
-                    future: futureLogs,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Text("All Logs");
-                      } else if (snapshot.hasError) {
-                        return Text("All Logs");
-                      } else {
-                        return Text("All Logs ${snapshot.data!.length}");
-                      }
+          appBar: AppBar(
+            title: _isSearching
+                ? TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
                     },
-                  )),
-                  Tab(text: 'Error Logs'),
-                ],
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "Search logs...",
+                      hintStyle: TextStyle(color: Colors.white),
+                    ),
+                  )
+                : Text('logs for sessionId = ${widget.sessionId} ',
+                    style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.grey[700],
+            iconTheme: IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    if (_isSearching) {
+                      _isSearching = false;
+                      _searchQuery = "";
+                    } else {
+                      _isSearching = true;
+                    }
+                  });
+                },
               ),
-            ),
-            body: TabBarView(
-              children: [
-                FutureBuilder<List<Log>>(
-                    future: futureLogs,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                            child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ));
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
-                      } else {
-                        var filteredLogs = snapshot.data!
-                            .where((log) => log.content
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase()))
-                            .toList();
+            ],
+            /*    bottom: TabBar(
+              labelColor: Colors.white,
+              indicatorColor: Colors.white,
+              tabs: [
+                Tab(text: 'All Logs'),
+                Tab(text: 'Error Logs'),
+              ],
+            ), */
+          ),
+          body: LayoutBuilder(builder: (context, constraints) {
+            var maxWidth = constraints.maxWidth - 16;
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        width: maxWidth * 0.1,
+                        child: Text('ID',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      Container(
+                        width: maxWidth * 0.2,
+                        child: Text('Created',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      Container(
+                        width: maxWidth * 0.2,
+                        child: Center(
+                            child: Text('Level',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                      ),
+                      Container(
+                        width: maxWidth * 0.5,
+                        child: Text('Content',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: ListView.separated(
+                      controller: _scrollController,
 
-                        if (filteredLogs.isEmpty) {
-                          return Center(
-                              child: Text(_isSearching
-                                  ? "No results found for '$_searchQuery'"
-                                  : 'No logs'));
-                        }
-                        return LayoutBuilder(builder: (context, constraints) {
-                          var maxWidth = constraints.maxWidth - 16;
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: <Widget>[
-                                      Container(
-                                        width: maxWidth *
-                                            0.25, // 1/4 of the total width
-                                        child: Text('Create Time',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
+                      itemCount: _isLoading
+                          ? logs.length + 2
+                          : logs.length + 1, // Add 2 when loading, 1 otherwise
+
+                      separatorBuilder: (context, index) =>
+                          Divider(color: Colors.grey),
+                      itemBuilder: (context, index) {
+                        if (index == logs.length) {
+                          // The last item is the loading indicator
+                          return _isLoading
+                              ? Center(child: CircularProgressIndicator())
+                              : SizedBox.shrink();
+                        } else if (index == logs.length + 1) {
+                          // Extra space at the bottom
+                          return _isLoading
+                              ? Container(height: 50.0)
+                              : SizedBox
+                                  .shrink(); // Adjust the height as needed
+                        } else {
+                          var log = logs[index];
+                          var start = log.content
+                              .toLowerCase()
+                              .indexOf(_searchQuery.toLowerCase());
+                          var end = start + _searchQuery.length;
+                          return Row(
+                            children: <Widget>[
+                              Container(
+                                width: maxWidth * 0.1,
+                                child: Text(log.id.toString()),
+                              ),
+                              Container(
+                                width: maxWidth * 0.2,
+                                child: Text(log.formattedTime),
+                              ),
+                              Container(
+                                width: maxWidth * 0.2,
+                                child: Center(
+                                    child: Text(
+                                        log.level.toString().split('.').last)),
+                              ),
+                              Container(
+                                width: maxWidth * 0.5,
+                                child: RichText(
+                                  text: TextSpan(
+                                    text: log.content.substring(0, start),
+                                    style: DefaultTextStyle.of(context)
+                                        .style
+                                        .copyWith(fontSize: 12),
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                        text: log.content.substring(start, end),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
                                       ),
-                                      Container(
-                                        width: maxWidth *
-                                            0.25, // 1/4 of the total width
-                                        child: Center(
-                                            child: Text('Level',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold))),
-                                      ),
-                                      Container(
-                                        width: maxWidth *
-                                            0.5, // 1/2 of the total width
-                                        child: Text('Content',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
+                                      TextSpan(
+                                        text: log.content.substring(end),
                                       ),
                                     ],
                                   ),
-                                  ListView.separated(
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    itemCount: filteredLogs.length,
-                                    separatorBuilder: (context, index) =>
-                                        Divider(color: Colors.grey),
-                                    itemBuilder: (context, index) {
-                                      var log = filteredLogs[index];
-                                      var start = log.content
-                                          .toLowerCase()
-                                          .indexOf(_searchQuery.toLowerCase());
-                                      var end = start + _searchQuery.length;
-                                      return Row(
-                                        children: <Widget>[
-                                          Container(
-                                            width: maxWidth *
-                                                0.25, // 1/4 of the total width
-                                            child: Text(log.formattedTime),
-                                          ),
-                                          Container(
-                                            width: maxWidth *
-                                                0.25, // 1/4 of the total width
-                                            child: Center(
-                                                child: Text(log.level
-                                                    .toString()
-                                                    .split('.')
-                                                    .last)),
-                                          ),
-                                          Container(
-                                            width: maxWidth *
-                                                0.5, // 1/2 of the total width
-                                            child: RichText(
-                                              text: TextSpan(
-                                                text: log.content
-                                                    .substring(0, start),
-                                                style: DefaultTextStyle.of(
-                                                        context)
-                                                    .style
-                                                    .copyWith(
-                                                        fontSize:
-                                                            12), // Reduced font size
-                                                children: <TextSpan>[
-                                                  TextSpan(
-                                                    text: log.content
-                                                        .substring(start, end),
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                  TextSpan(
-                                                    text: log.content
-                                                        .substring(end),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
+                            ],
                           );
-                        });
-                      }
-                    }),
-                FutureBuilder<List<Log>>(
-                  future: futureLogs,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                          child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ));
-                    } else if (snapshot.hasData) {
-                      final errorLogs = snapshot.data!
-                          .where((log) =>
-                              log.level
-                                  .toString()
-                                  .split('.')
-                                  .last
-                                  .toLowerCase() ==
-                              'error')
-                          .toList();
-                      if (errorLogs.isEmpty) {
-                        return Center(child: Text('No error logs found.'));
-                      }
-                      return ListView.builder(
-                        itemCount: errorLogs.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(errorLogs[index].content),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/log',
-                                arguments: errorLogs[index],
-                              );
-                            },
-                          );
-                        },
-                      );
-                    } else if (snapshot.hasError) {
-                      return Text("${snapshot.error}");
-                    }
-
-                    return Container(); // Return an empty Container as a fallback
-                  },
-                ),
-              ],
-            )));
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ));
   }
 }
