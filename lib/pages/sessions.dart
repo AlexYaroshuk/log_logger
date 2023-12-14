@@ -3,9 +3,9 @@ import '../services/fetch_sessions.dart'; // Import the fetchSessions function
 import '../models/session.dart'; // Import the Session model
 
 class SessionsPage extends StatelessWidget {
-  final int scriptId;
+  final int programId;
 
-  SessionsPage({required this.scriptId});
+  SessionsPage({required this.programId});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class SessionsPage extends StatelessWidget {
       appBar: AppBar(
         // Define the app bar
         title: Text(
-          'Sessions for script ${scriptId}',
+          'Sessions for program ${programId}',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.grey[700],
@@ -21,7 +21,7 @@ class SessionsPage extends StatelessWidget {
       ),
       body: FutureBuilder<List<Session>>(
         // Replace with your session fetching logic
-        future: fetchSessions(scriptId),
+        future: fetchSessions(programId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(

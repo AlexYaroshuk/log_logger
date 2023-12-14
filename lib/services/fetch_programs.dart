@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/script.dart';
+import '../models/program.dart';
 import '../config.dart';
 
-Future<List<Script>> fetchScripts({bool withTimeout = true}) async {
+Future<List<Program>> fetchPrograms({bool withTimeout = true}) async {
   try {
-    print('Fetching scripts...');
+    print('Fetching programs...');
     final responseFuture = http.get(Uri.parse('${Config.API_URL}/program/1'));
 
     http.Response response;
@@ -19,14 +19,14 @@ Future<List<Script>> fetchScripts({bool withTimeout = true}) async {
     }
 
     if (response.statusCode == 200) {
-      print('Response received. Parsing scripts...');
-      List scripts = json.decode(response.body);
-      print(scripts);
+      print('Response received. Parsing programs...');
+      List programs = json.decode(response.body);
+      print(programs);
 
-      return scripts.map((script) => Script.fromJson(script)).toList();
+      return programs.map((program) => Program.fromJson(program)).toList();
     } else {
       print('Server returned status code: ${response.statusCode}');
-      throw 'Failed to load scripts';
+      throw 'Failed to load programs';
     }
   } on SocketException catch (e) {
     print('SocketException: $e');

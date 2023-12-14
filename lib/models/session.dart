@@ -4,7 +4,7 @@ enum SessionStatus { started, finished, failed }
 
 class Session {
   final int id;
-  final int scriptId;
+  final int programId;
   final String name;
   final SessionStatus status;
   final String createTime;
@@ -13,7 +13,7 @@ class Session {
 
   Session({
     required this.id,
-    required this.scriptId,
+    required this.programId,
     required this.name,
     required this.status,
     required this.createTime,
@@ -24,7 +24,7 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
       id: json['id'] ?? 0,
-      scriptId: json['script_id'] ?? 0,
+      programId: json['program_id'] ?? 0,
       name: json['name'] ?? '',
       status: _parseSessionStatus(json['status']),
       createTime: json['create_time'] ?? '',
@@ -36,7 +36,7 @@ class Session {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'scriptId': scriptId,
+      'programId': programId,
       'name': name,
       'status': status.toString().split('.').last.toUpperCase(),
       'create_time': createTime,

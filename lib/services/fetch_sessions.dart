@@ -3,11 +3,11 @@ import 'dart:convert';
 import '../models/session.dart';
 import '../config.dart';
 
-Future<List<Session>> fetchSessions(int scriptId) async {
+Future<List<Session>> fetchSessions(int programId) async {
   try {
     print('Fetching sessions...');
     final response =
-        await http.get(Uri.parse('${Config.API_URL}/session/${scriptId}'));
+        await http.get(Uri.parse('${Config.API_URL}/session/${programId}'));
 
     if (response.statusCode == 200) {
       print('Response received. Parsing sessions...');

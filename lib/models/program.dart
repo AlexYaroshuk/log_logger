@@ -1,16 +1,16 @@
-class Script {
+class Program {
   final int id;
   final String name;
   final String createTime;
 
-  Script({
+  Program({
     required this.id,
     required this.name,
     required this.createTime,
   });
 
-  factory Script.fromJson(Map<String, dynamic> json) {
-    return Script(
+  factory Program.fromJson(Map<String, dynamic> json) {
+    return Program(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       createTime: json['create_time'] ?? '',
