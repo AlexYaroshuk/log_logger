@@ -84,7 +84,7 @@ class SessionsPage extends StatelessWidget {
                       );
                     } else {
                       // This is the data
-                      var session = snapshot
+                      Session session = snapshot
                           .data![index - 1]; // Subtract one for the header
                       return InkWell(
                         onTap: () {

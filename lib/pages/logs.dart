@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/log.dart';
 import '../services/fetch_logs.dart';
 
@@ -124,9 +125,10 @@ class _LogsPageState extends State<LogsPage> {
   String _searchQuery = "";
   ScrollController _scrollController = ScrollController();
   int _offset = 0;
-  final int _limit = 10;
+  final int _limit = 100;
   bool _isLoading = false;
-// ?? actual
+  FocusNode _searchFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -154,12 +156,18 @@ class _LogsPageState extends State<LogsPage> {
 
   @override
   Widget build(BuildContext context) {
+    List filteredLogs = logs
+        .where((log) =>
+            log.content.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+
     return DefaultTabController(
         length: 2,
         child: Scaffold(
           appBar: AppBar(
             title: _isSearching
                 ? TextField(
+                    focusNode: _searchFocusNode,
                     onChanged: (value) {
                       setState(() {
                         _searchQuery = value;
@@ -185,6 +193,9 @@ class _LogsPageState extends State<LogsPage> {
                       _searchQuery = "";
                     } else {
                       _isSearching = true;
+                      _searchFocusNode
+                          .requestFocus(); // Request focus when search is activated
+                      SystemChannels.textInput.invokeMethod('TextInput.show');
                     }
                   });
                 },
@@ -200,7 +211,7 @@ class _LogsPageState extends State<LogsPage> {
             ), */
           ),
           body: LayoutBuilder(builder: (context, constraints) {
-            var maxWidth = constraints.maxWidth - 16;
+            double maxWidth = constraints.maxWidth - 16;
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -231,75 +242,77 @@ class _LogsPageState extends State<LogsPage> {
                     ],
                   ),
                   Expanded(
-                    child: ListView.separated(
-                      controller: _scrollController,
+                    child: filteredLogs.isEmpty && _searchQuery.isNotEmpty
+                        ? Center(
+                            child: Text("No logs found for '${_searchQuery}'"))
+                        : ListView.separated(
+                            controller: _scrollController,
+                            itemCount: _isLoading
+                                ? filteredLogs.length + 2
+                                : filteredLogs.length + 1,
+                            separatorBuilder: (context, index) =>
+                                Divider(color: Colors.grey),
+                            itemBuilder: (context, index) {
+                              if (index == filteredLogs.length) {
+                                return _isLoading
+                                    ? Center(child: CircularProgressIndicator())
+                                    : SizedBox.shrink();
+                              } else if (index == filteredLogs.length + 1) {
+                                return _isLoading
+                                    ? Container(height: 50.0)
+                                    : SizedBox.shrink();
+                              } else {
+                                Log log = filteredLogs[index];
+                                int start = log.content
+                                    .toLowerCase()
+                                    .indexOf(_searchQuery.toLowerCase());
+                                int end = start + _searchQuery.length;
 
-                      itemCount: _isLoading
-                          ? logs.length + 2
-                          : logs.length + 1, // Add 2 when loading, 1 otherwise
-
-                      separatorBuilder: (context, index) =>
-                          Divider(color: Colors.grey),
-                      itemBuilder: (context, index) {
-                        if (index == logs.length) {
-                          // The last item is the loading indicator
-                          return _isLoading
-                              ? Center(child: CircularProgressIndicator())
-                              : SizedBox.shrink();
-                        } else if (index == logs.length + 1) {
-                          // Extra space at the bottom
-                          return _isLoading
-                              ? Container(height: 50.0)
-                              : SizedBox
-                                  .shrink(); // Adjust the height as needed
-                        } else {
-                          var log = logs[index];
-                          var start = log.content
-                              .toLowerCase()
-                              .indexOf(_searchQuery.toLowerCase());
-                          var end = start + _searchQuery.length;
-                          return Row(
-                            children: <Widget>[
-                              Container(
-                                width: maxWidth * 0.1,
-                                child: Text(log.id.toString()),
-                              ),
-                              Container(
-                                width: maxWidth * 0.2,
-                                child: Text(log.formattedTime),
-                              ),
-                              Container(
-                                width: maxWidth * 0.2,
-                                child: Center(
-                                    child: Text(
-                                        log.level.toString().split('.').last)),
-                              ),
-                              Container(
-                                width: maxWidth * 0.5,
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: log.content.substring(0, start),
-                                    style: DefaultTextStyle.of(context)
-                                        .style
-                                        .copyWith(fontSize: 12),
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: log.content.substring(start, end),
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                return Row(
+                                  children: <Widget>[
+                                    Container(
+                                      width: maxWidth * 0.1,
+                                      child: Text(log.id.toString()),
+                                    ),
+                                    Container(
+                                      width: maxWidth * 0.2,
+                                      child: Text(log.formattedTime),
+                                    ),
+                                    Container(
+                                      width: maxWidth * 0.2,
+                                      child: Center(
+                                          child: Text(log.level
+                                              .toString()
+                                              .split('.')
+                                              .last)),
+                                    ),
+                                    Container(
+                                      width: maxWidth * 0.5,
+                                      child: RichText(
+                                        text: TextSpan(
+                                          text: log.content.substring(0, start),
+                                          style: DefaultTextStyle.of(context)
+                                              .style
+                                              .copyWith(fontSize: 12),
+                                          children: <TextSpan>[
+                                            TextSpan(
+                                              text: log.content
+                                                  .substring(start, end),
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(
+                                              text: log.content.substring(end),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      TextSpan(
-                                        text: log.content.substring(end),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-                      },
-                    ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            },
+                          ),
                   ),
                 ],
               ),
