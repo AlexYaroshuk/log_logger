@@ -173,13 +173,14 @@ class _LogsPageState extends State<LogsPage> {
                         _searchQuery = value;
                       });
                     },
-                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: "Search logs...",
-                      hintStyle: TextStyle(color: Colors.white),
-                    ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: "Search logs...",
+                        hintStyle: TextStyle(color: Colors.grey),
+                        border: InputBorder.none),
                   )
-                : Text('logs for sessionId = ${widget.sessionId} ',
+                : SelectableText('logs for sessionId = ${widget.sessionId} ',
                     style: TextStyle(color: Colors.white)),
             backgroundColor: Colors.grey[700],
             iconTheme: IconThemeData(color: Colors.white),
@@ -220,23 +221,23 @@ class _LogsPageState extends State<LogsPage> {
                     children: <Widget>[
                       Container(
                         width: maxWidth * 0.1,
-                        child: Text('ID',
+                        child: SelectableText('ID',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                       Container(
                         width: maxWidth * 0.2,
-                        child: Text('Created',
+                        child: SelectableText('Created',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                       Container(
                         width: maxWidth * 0.2,
                         child: Center(
-                            child: Text('Level',
+                            child: SelectableText('Level',
                                 style: TextStyle(fontWeight: FontWeight.bold))),
                       ),
                       Container(
                         width: maxWidth * 0.5,
-                        child: Text('Content',
+                        child: SelectableText('Content',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
@@ -244,7 +245,8 @@ class _LogsPageState extends State<LogsPage> {
                   Expanded(
                     child: filteredLogs.isEmpty && _searchQuery.isNotEmpty
                         ? Center(
-                            child: Text("No logs found for '${_searchQuery}'"))
+                            child: SelectableText(
+                                "No logs found for '${_searchQuery}'"))
                         : ListView.separated(
                             controller: _scrollController,
                             itemCount: _isLoading
@@ -272,42 +274,44 @@ class _LogsPageState extends State<LogsPage> {
                                   children: <Widget>[
                                     Container(
                                       width: maxWidth * 0.1,
-                                      child: Text(log.id.toString()),
+                                      child: SelectableText(log.id.toString()),
                                     ),
                                     Container(
                                       width: maxWidth * 0.2,
-                                      child: Text(log.formattedTime),
+                                      child: SelectableText(log.formattedTime),
                                     ),
                                     Container(
                                       width: maxWidth * 0.2,
                                       child: Center(
-                                          child: Text(log.level
+                                          child: SelectableText(log.level
                                               .toString()
                                               .split('.')
                                               .last)),
                                     ),
                                     Container(
-                                      width: maxWidth * 0.5,
-                                      child: RichText(
-                                        text: TextSpan(
-                                          text: log.content.substring(0, start),
-                                          style: DefaultTextStyle.of(context)
-                                              .style
-                                              .copyWith(fontSize: 12),
-                                          children: <TextSpan>[
-                                            TextSpan(
-                                              text: log.content
-                                                  .substring(start, end),
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: log.content.substring(end),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                        width: maxWidth * 0.5,
+                                        child: SelectableText.rich(
+                                          TextSpan(
+                                            text:
+                                                log.content.substring(0, start),
+                                            style: DefaultTextStyle.of(context)
+                                                .style
+                                                .copyWith(fontSize: 12),
+                                            children: <TextSpan>[
+                                              TextSpan(
+                                                text: log.content
+                                                    .substring(start, end),
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              TextSpan(
+                                                text:
+                                                    log.content.substring(end),
+                                              ),
+                                            ],
+                                          ),
+                                        )),
                                   ],
                                 );
                               }
