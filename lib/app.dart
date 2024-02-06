@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'routes.dart';
 
+
+
 class App extends StatelessWidget {
+ 
+
+    void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+}
+
   @override
   Widget build(BuildContext context) {
+  
     return MaterialApp(
       title: 'Log Viewer',
       theme: ThemeData(

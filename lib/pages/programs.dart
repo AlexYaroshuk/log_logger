@@ -1,4 +1,6 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:log_viewer/services/sendToken.dart';
 import '../services/fetch_programs.dart';
 import '../models/program.dart';
 
@@ -37,6 +39,7 @@ class _ProgramsPageState extends State<ProgramsPage> {
         ],
       ),
       body: FutureBuilder<List<Program>>(
+
         future:
             fetchPrograms(), //call fetchPrograms(withTimeout: false) to remove the manual timeout & to see the actual error for debugging
         builder: (context, snapshot) {
@@ -75,6 +78,38 @@ class _ProgramsPageState extends State<ProgramsPage> {
           }
         },
       ),
+     floatingActionButton: FloatingActionButton(
+  onPressed: () async {
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          String label = '';
+          return AlertDialog(
+            title: Text('Enter a label for this device'),
+            content: TextField(
+              onChanged: (value) {
+                label = value;
+              },
+              decoration: InputDecoration(hintText: "Label"),
+            ),
+            actions: [
+              ElevatedButton(
+                child: Text('Submit'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  sendToken(token, label);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  },
+  child: Text("Send token"),
+),
     );
   }
 }
